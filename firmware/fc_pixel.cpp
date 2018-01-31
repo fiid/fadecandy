@@ -1,19 +1,19 @@
 /*
  * Fadecandy Firmware: Low-level pixel update code
  * (Included into fadecandy.cpp)
- * 
+ *
  * Copyright (c) 2013 Micah Elizabeth Scott
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
  * the Software, and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
@@ -39,27 +39,31 @@ static uint32_t FCP_FN(updatePixel)(uint32_t icPrev, uint32_t icNext,
 
 #if FCP_INTERPOLATION
     // Per-channel linear interpolation and conversion to 16-bit color.
-    // Result range: [0, 0xFFFF] 
+    // Result range: [0, 0xFFFF]
     int iR = (pixelPrev[0] * icPrev + pixelNext[0] * icNext) >> 16;
     int iG = (pixelPrev[1] * icPrev + pixelNext[1] * icNext) >> 16;
     int iB = (pixelPrev[2] * icPrev + pixelNext[2] * icNext) >> 16;
+    int iW = (pixelPrev[3] * icPrev + pixelNext[3] * icNext) >> 16;
 #else
     int iR = pixelNext[0] * 0x101;
     int iG = pixelNext[1] * 0x101;
     int iB = pixelNext[2] * 0x101;
+    int iW = pixelNext[3] * 0x101;
 #endif
 
     // Pass through our color LUT
-    // Result range: [0, 0xFFFF] 
+    // Result range: [0, 0xFFFF]
     iR = FCP_FN(lutInterpolate)(buffers.lutCurrent.r, iR);
     iG = FCP_FN(lutInterpolate)(buffers.lutCurrent.g, iG);
     iB = FCP_FN(lutInterpolate)(buffers.lutCurrent.b, iB);
+    iW = FCP_FN(lutInterpolate)(buffers.lutCurrent.w, iW);
 
 #if FCP_DITHERING
     // Incorporate the residual from last frame
     iR += pResidual[0];
     iG += pResidual[1];
     iB += pResidual[2];
+    iW += pResidual[3];
 #endif
 
     /*
@@ -76,14 +80,18 @@ static uint32_t FCP_FN(updatePixel)(uint32_t icPrev, uint32_t icNext,
     int r8 = __USAT(iR + 0x80, 16) >> 8;
     int g8 = __USAT(iG + 0x80, 16) >> 8;
     int b8 = __USAT(iB + 0x80, 16) >> 8;
+    int w8 = __USAT(iW + 0x80, 16) >> 8;
 
 #if FCP_DITHERING
     // Compute the error, after expanding the 8-bit value back to 16-bit.
     pResidual[0] = iR - (r8 * 257);
     pResidual[1] = iG - (g8 * 257);
     pResidual[2] = iB - (b8 * 257);
+    pResidual[3] = iW - (w8 * 257);
 #endif
 
     // Pack the result, in GRB order.
-    return (g8 << 16) | (r8 << 8) | b8;
+    //return (g8 << 16) | (r8 << 8) | b8;
+    // return in RGBW order.
+    return (r8 << 24) | (g8 << 16) | (b8 << 8) | w8;
 }

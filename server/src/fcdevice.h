@@ -1,18 +1,18 @@
 /*
  * Fadecandy device interface
- * 
+ *
  * Copyright (c) 2013 Micah Elizabeth Scott
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
  * the Software, and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
@@ -44,7 +44,7 @@ public:
     virtual void flush();
     virtual void describe(rapidjson::Value &object, Allocator &alloc);
 
-    static const unsigned NUM_PIXELS = 512;
+    static const unsigned NUM_PIXELS = 384;
 
     // Send current buffer contents
     void writeFramebuffer();
@@ -53,7 +53,7 @@ public:
     uint8_t *fbPixel(unsigned num) {
         return &mFramebuffer[num / PIXELS_PER_PACKET].data[3 * (num % PIXELS_PER_PACKET)];
     }
- 
+
 private:
     static const unsigned PIXELS_PER_PACKET = 21;
     static const unsigned LUT_ENTRIES_PER_PACKET = 31;

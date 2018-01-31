@@ -1,18 +1,18 @@
 /*
  * Fadecandy Firmware
- * 
+ *
  * Copyright (c) 2013 Micah Elizabeth Scott
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
  * the Software, and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
@@ -27,15 +27,15 @@
 
 #pragma once
 
-#define LEDS_PER_STRIP          64
+#define LEDS_PER_STRIP          48
 #define LEDS_TOTAL              (LEDS_PER_STRIP * 8)
-#define CHANNELS_TOTAL          (LEDS_TOTAL * 3)
+#define CHANNELS_TOTAL          (LEDS_TOTAL * 4)
 
 #define LUT_CH_SIZE             257
 #define LUT_TOTAL_SIZE          (LUT_CH_SIZE * 3)
 
 // USB packet layout
-#define PIXELS_PER_PACKET       21
+#define PIXELS_PER_PACKET       16
 #define LUTENTRIES_PER_PACKET   31
 #define PACKETS_PER_FRAME       25
 #define PACKETS_PER_LUT         25
@@ -44,5 +44,5 @@
 
 #define VENDOR_ID               0x1d50    // OpenMoko
 #define PRODUCT_ID              0x607a    // Assigned to Fadecandy project
-#define DEVICE_VER              0x0108	  // BCD device version
-#define DEVICE_VER_STRING		"1.08"
+#define DEVICE_VER              0x0118	  // BCD device version
+#define DEVICE_VER_STRING		"1.18"

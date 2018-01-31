@@ -1,18 +1,18 @@
 /*
  * Fadecandy Firmware
- * 
+ *
  * Copyright (c) 2013 Micah Elizabeth Scott
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
  * the Software, and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
@@ -34,7 +34,7 @@ static fcBuffers buffers;
 fcLinearLUT fcBuffers::lutCurrent;
 
 // Double-buffered DMA memory for raw bit planes of output
-static DMAMEM int ledBuffer[LEDS_PER_STRIP * 12];
+static DMAMEM int ledBuffer[LEDS_PER_STRIP * 16];
 static OctoWS2811z leds(LEDS_PER_STRIP, ledBuffer, WS2811_800kHz);
 
 /*
@@ -149,7 +149,7 @@ extern "C" int main()
 
     // Announce firmware version
     serial_begin(BAUD2DIV(115200));
-    serial_print("Fadecandy v" DEVICE_VER_STRING "\r\n");
+    serial_print("Wadecandy v" DEVICE_VER_STRING "\r\n");
 
     // Application main loop
     while (usb_dfu_state == DFU_appIDLE) {

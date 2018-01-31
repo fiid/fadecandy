@@ -1,18 +1,18 @@
 /*
  * Fadecandy device interface
- * 
+ *
  * Copyright (c) 2013 Micah Elizabeth Scott
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
  * the Software, and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
@@ -57,7 +57,7 @@ FCDevice::Transfer::~Transfer()
 }
 
 FCDevice::FCDevice(libusb_device *device, bool verbose)
-    : USBDevice(device, "fadecandy", verbose),
+    : USBDevice(device, "wadecandy", verbose),
       mConfigMap(0), mNumFramesPending(0), mFrameWaitingForSubmit(false)
 {
     mSerialBuffer[0] = '\0';
@@ -128,7 +128,7 @@ int FCDevice::open()
     unsigned minor = mDD.bcdDevice & 0xFF;
     snprintf(mVersionString, sizeof mVersionString, "%x.%02x", major, minor);
 
-    return libusb_get_string_descriptor_ascii(mHandle, mDD.iSerialNumber, 
+    return libusb_get_string_descriptor_ascii(mHandle, mDD.iSerialNumber,
         (uint8_t*)mSerialBuffer, sizeof mSerialBuffer);
 }
 
@@ -150,7 +150,7 @@ void FCDevice::writeFirmwareConfiguration(const Value &config)
     if (!config.IsObject()) {
         std::clog << "Firmware configuration is not a JSON object\n";
         return;
-    }        
+    }
 
     const Value &led = config["led"];
     const Value &dither = config["dither"];
@@ -255,7 +255,7 @@ void FCDevice::writeColorCorrection(const Value &color)
 
     // Default color LUT parameters
     double gamma = 1.0;                         // Power for nonlinear portion of curve
-    double whitepoint[3] = {1.0, 1.0, 1.0};     // White-point RGB value (also, global brightness)
+    double whitepoint[4] = {1.0, 1.0, 1.0, 1.0};     // White-point RGB value (also, global brightness)
     double linearSlope = 1.0;                   // Slope (output / input) of linear section of the curve, near zero
     double linearCutoff = 0.0;                  // Y (output) coordinate of intersection of linear and nonlinear curves
 
@@ -288,15 +288,16 @@ void FCDevice::writeColorCorrection(const Value &color)
         }
 
         if (vWhitepoint.IsArray() &&
-            vWhitepoint.Size() == 3 &&
+            vWhitepoint.Size() == 4 &&
             vWhitepoint[0u].IsNumber() &&
             vWhitepoint[1].IsNumber() &&
             vWhitepoint[2].IsNumber()) {
             whitepoint[0] = vWhitepoint[0u].GetDouble();
             whitepoint[1] = vWhitepoint[1].GetDouble();
             whitepoint[2] = vWhitepoint[2].GetDouble();
+            whitepoint[3] = vWhitepoint[3].GetDouble();
         } else if (!vWhitepoint.IsNull() && mVerbose) {
-            std::clog << "Whitepoint value must be a list of 3 numbers.\n";
+            std::clog << "Whitepoint value must be a list of 4 numbers.\n";
         }
 
     } else if (!color.IsNull() && mVerbose) {
@@ -311,7 +312,7 @@ void FCDevice::writeColorCorrection(const Value &color)
     const unsigned firstByteOffset = 1;  // Skip padding byte
     unsigned byteOffset = firstByteOffset;
 
-    for (unsigned channel = 0; channel < 3; channel++) {
+    for (unsigned channel = 0; channel < 4; channel++) {
         for (unsigned entry = 0; entry < LUT_ENTRIES; entry++) {
             double output;
 
@@ -396,7 +397,7 @@ void FCDevice::writeMessage(Document &msg)
 
     if (!strcmp(type, "device_options")) {
         /*
-         * TODO: Eventually this should turn into the same thing as 
+         * TODO: Eventually this should turn into the same thing as
          *       loadConfiguration() and it shouldn't be device-specific,
          *       but for now most of fcserver assumes the configuration is static.
          */
@@ -430,7 +431,7 @@ void FCDevice::writeDevicePixels(Document &msg)
     } else {
 
         // Truncate to the framebuffer size, and only deal in whole pixels.
-        int numPixels = pixels.Size() / 3;
+        int numPixels = pixels.Size() / 4;
         if (numPixels > NUM_PIXELS)
             numPixels = NUM_PIXELS;
 
@@ -440,10 +441,12 @@ void FCDevice::writeDevicePixels(Document &msg)
             const Value &r = pixels[i*3 + 0];
             const Value &g = pixels[i*3 + 1];
             const Value &b = pixels[i*3 + 2];
+            const Value &w = pixels[i*3 + 3];
 
             out[0] = std::max(0, std::min(255, r.IsInt() ? r.GetInt() : 0));
             out[1] = std::max(0, std::min(255, g.IsInt() ? g.GetInt() : 0));
             out[2] = std::max(0, std::min(255, b.IsInt() ? b.GetInt() : 0));
+            out[3] = std::max(0, std::min(255, w.IsInt() ? w.GetInt() : 0));
         }
 
         writeFramebuffer();
@@ -529,7 +532,7 @@ void FCDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
      *   [ OPC Channel, First OPC Pixel, First output pixel, Color channels ]
      */
 
-    unsigned msgPixelCount = msg.length() / 3;
+    unsigned msgPixelCount = msg.length() / 4;
 
     if (inst.IsArray() && inst.Size() == 4) {
         // Map a range from an OPC channel to our framebuffer
@@ -565,7 +568,7 @@ void FCDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
                     direction > 0 ? NUM_PIXELS - firstOut : firstOut + 1);
 
             // Copy pixels
-            const uint8_t *inPtr = msg.data + (firstOPC * 3);
+            const uint8_t *inPtr = msg.data + (firstOPC * 4);
             unsigned outIndex = firstOut;
             while (count--) {
                 uint8_t *outPtr = fbPixel(outIndex);
@@ -573,7 +576,8 @@ void FCDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
                 outPtr[0] = inPtr[0];
                 outPtr[1] = inPtr[1];
                 outPtr[2] = inPtr[2];
-                inPtr += 3;
+                outPtr[3] = inPtr[3];
+                inPtr += 4;
             }
 
             return;
@@ -590,7 +594,7 @@ void FCDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
         const Value &vColorChannels = inst[4];
 
         if (vChannel.IsUint() && vFirstOPC.IsUint() && vFirstOut.IsUint() && vCount.IsInt()
-            && vColorChannels.IsString() && vColorChannels.GetStringLength() == 3) {
+            && vColorChannels.IsString() && vColorChannels.GetStringLength() == 4) {
 
             unsigned channel = vChannel.GetUint();
             unsigned firstOPC = vFirstOPC.GetUint();
@@ -618,21 +622,21 @@ void FCDevice::opcMapPixelColors(const OPC::Message &msg, const Value &inst)
                     direction > 0 ? NUM_PIXELS - firstOut : firstOut + 1);
 
             // Copy pixels
-            const uint8_t *inPtr = msg.data + (firstOPC * 3);
+            const uint8_t *inPtr = msg.data + (firstOPC * 4);
             unsigned outIndex = firstOut;
             bool success = true;
             while (count--) {
                 uint8_t *outPtr = fbPixel(outIndex);
                 outIndex += direction;
 
-                for (int channel = 0; channel < 3; channel++) {
+                for (int channel = 0; channel < 4; channel++) {
                     if (!OPC::pickColorChannel(outPtr[channel], colorChannels[channel], inPtr)) {
                         success = false;
                         break;
                     }
                 }
 
-                inPtr += 3;
+                inPtr += 4;
             }
 
             if (success) {

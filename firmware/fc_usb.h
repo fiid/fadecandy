@@ -1,18 +1,18 @@
 /*
  * Fadecandy Firmware - USB Support
- * 
+ *
  * Copyright (c) 2013 Micah Elizabeth Scott
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
  * the Software, and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
@@ -71,7 +71,7 @@ struct fcFramebuffer : public fcPacketBuffer<PACKETS_PER_FRAME>
 {
     ALWAYS_INLINE const uint8_t* pixel(unsigned index)
     {
-        return &packets[index / PIXELS_PER_PACKET]->buf[1 + (index % PIXELS_PER_PACKET) * 3];
+        return &packets[index / PIXELS_PER_PACKET]->buf[1 + (index % PIXELS_PER_PACKET) * 4];
     }
 };
 
@@ -110,6 +110,7 @@ union fcLinearLUT
         uint16_t r[LUT_CH_SIZE];
         uint16_t g[LUT_CH_SIZE];
         uint16_t b[LUT_CH_SIZE];
+        uint16_t w[LUT_CH_SIZE];
     };
 };
 

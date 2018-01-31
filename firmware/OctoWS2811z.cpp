@@ -43,7 +43,7 @@ OctoWS2811z::OctoWS2811z(uint32_t numPerStrip, void *buffer, uint8_t config)
 {
     stripLen = numPerStrip;
     frameBuffer = buffer;
-    drawBuffer = (24 * numPerStrip) + (uint8_t*) buffer;
+    drawBuffer = (32 * numPerStrip) + (uint8_t*) buffer;
     params = config;
 }
 
@@ -70,14 +70,14 @@ void OctoWS2811z::begin(void)
 {
     uint32_t bufsize, frequency;
 
-    bufsize = stripLen*24;
+    bufsize = stripLen*32;
 
     // Clear both front and back buffers
     for (unsigned i = 0; i < bufsize; i++) {
         ((uint8_t*)frameBuffer)[i] = 0;
         ((uint8_t*)drawBuffer)[i] = 0;
     }
-    
+
     // configure the 8 output pins
     GPIOD_PCOR = 0xFF;
     pinMode(2, OUTPUT); // strip #1
@@ -186,7 +186,7 @@ void OctoWS2811z::show(void)
     uint32_t cv, sc;
 
     // wait for any prior DMA operation
-    while (update_in_progress) ; 
+    while (update_in_progress) ;
 
     // Swap buffer pointers without copying
     std::swap(frameBuffer, drawBuffer);
@@ -210,7 +210,7 @@ void OctoWS2811z::show(void)
     // performed to create realistic bus usage.  Even then, you really
     // should not mess with this timing critical code!
     update_in_progress = 1;
-    while (FTM1_CNT <= cv) ; 
+    while (FTM1_CNT <= cv) ;
     while (FTM1_CNT > cv) ; // wait for beginning of an 800 kHz cycle
     while (FTM1_CNT < cv) ;
     FTM1_SC = sc & 0xE7;    // stop FTM1 timer (hopefully before it rolls over)
